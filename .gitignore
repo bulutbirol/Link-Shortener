@@ -1,0 +1,12 @@
+**/node_modules/
+**/dist/
+**/build/
+**/target/
+.m2/
+.npm-cache/
+.env
+.env.*
+!**/.env.example
+**/.dev.vars
+**/.wrangler/
+*.log
