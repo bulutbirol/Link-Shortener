@@ -32,3 +32,11 @@ test('root works before a frontend URL is configured', async () => {
   const response = await handler(new Request('https://short.example/'), { waitUntil() {} });
   assert.equal(response.status, 200);
 });
+
+test('rate-limited requests do not query the database', async () => {
+  let queried = false;
+  const handler = createHandler({ find: async () => { queried = true; } }, undefined, async () => false);
+  const response = await handler(new Request('https://short.example/Ab123xy'), { waitUntil() {} });
+  assert.equal(response.status, 429);
+  assert.equal(queried, false);
+});

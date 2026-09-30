@@ -33,7 +33,7 @@ class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     AuthResponse register(@Valid @RequestBody Credentials body, HttpServletRequest request) {
-        if (!limiter.allow("register:" + request.getRemoteAddr(), 5, 3600))
+        if (!limiter.allow("register:" + request.getRemoteAddr(), 30, 3600))
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many registrations");
         String email = body.email().trim().toLowerCase(Locale.ROOT);
         if (users.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
@@ -47,11 +47,15 @@ class AuthController {
 
     @PostMapping("/login")
     AuthResponse login(@Valid @RequestBody Credentials body, HttpServletRequest request) {
-        if (!limiter.allow("login:" + request.getRemoteAddr(), 20, 900))
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Try again later");
-        AppUser user = users.findByEmail(body.email().trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(UnauthorizedException::new);
-        if (!passwords.matches(body.password(), user.passwordHash)) throw new UnauthorizedException();
+        String email = body.email().trim().toLowerCase(Locale.ROOT);
+        AppUser user = users.findByEmail(email).orElse(null);
+        if (user == null || !passwords.matches(body.password(), user.passwordHash)) {
+            boolean clientAllowed = limiter.allow("login-client:" + request.getRemoteAddr(), 100, 900);
+            boolean accountAllowed = limiter.allow("login-account:" + email, 10, 900);
+            if (!clientAllowed || !accountAllowed)
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Try again later");
+            throw new UnauthorizedException();
+        }
         return new AuthResponse(tokens.issue(user.id), user.email);
     }
 }

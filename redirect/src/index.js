@@ -16,6 +16,11 @@ export default {
         await sql`UPDATE short_links SET click_count = click_count + 1 WHERE code = ${code} AND active = true`;
       },
     };
-    return createHandler(db, env.FRONTEND_URL)(request, context);
+    const allowRequest = async (incoming) => {
+      const ip = incoming.headers.get('CF-Connecting-IP') || 'unknown';
+      const result = await env.REDIRECT_LIMITER.limit({ key: ip });
+      return result.success;
+    };
+    return createHandler(db, env.FRONTEND_URL, allowRequest)(request, context);
   },
 };

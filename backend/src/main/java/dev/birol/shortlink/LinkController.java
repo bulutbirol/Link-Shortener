@@ -42,11 +42,13 @@ class LinkController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     LinkResponse create(@RequestHeader(value = "Authorization", required = false) String auth,
                         @Valid @RequestBody CreateLink body) {
         Long ownerId = currentUser(auth);
         if (!limiter.allow("create:" + ownerId, 10, 3600))
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Try again later");
+        users.lockById(ownerId).orElseThrow(UnauthorizedException::new);
         if (links.countByOwnerId(ownerId) >= 20)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "20 link limit reached");
         String target = LinkTargetPolicy.normalize(body.url());

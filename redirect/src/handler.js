@@ -1,4 +1,4 @@
-export function createHandler(db, frontendUrl) {
+export function createHandler(db, frontendUrl, allowRequest = async () => true) {
   return async function handle(request, context) {
     const url = new URL(request.url);
     if (url.pathname === '/') {
@@ -10,6 +10,9 @@ export function createHandler(db, frontendUrl) {
     const code = url.pathname.slice(1);
     if (!/^[a-zA-Z0-9]{7}$/.test(code)) {
       return new Response('Link not found', { status: 404 });
+    }
+    if (!(await allowRequest(request))) {
+      return new Response('Too many requests', { status: 429, headers: { 'retry-after': '60' } });
     }
     const link = await db.find(code);
     if (!link?.active) {
