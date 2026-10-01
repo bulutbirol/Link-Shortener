@@ -9,4 +9,5 @@
 !**/.env.example
 **/.dev.vars
 **/.wrangler/
+**/.vercel/
 *.log
