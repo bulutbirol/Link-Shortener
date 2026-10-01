@@ -2,6 +2,8 @@
 
 A small URL shortener built with Java and React. People can create an account, make short links, see click totals, and turn links off.
 
+[Live demo](https://shortlink-web-eight.vercel.app)
+
 The Spring Boot API manages accounts and links. A Cloudflare Worker handles redirects, so opening a short link doesn't have to wait for the Java service to wake up. Both use the same PostgreSQL database.
 
 ## Run locally
