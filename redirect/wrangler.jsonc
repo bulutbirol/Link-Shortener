@@ -2,6 +2,9 @@
   "name": "shortlink-redirect",
   "main": "src/index.js",
   "compatibility_date": "2026-09-30",
+  "vars": {
+    "FRONTEND_URL": "https://shortlink-web-eight.vercel.app"
+  },
   "ratelimits": [
     {
       "name": "REDIRECT_LIMITER",
